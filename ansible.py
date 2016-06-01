@@ -1,5 +1,6 @@
 from errbot import BotPlugin, arg_botcmd
 from os import walk
+from subprocess import STDOUT, check_output, CalledProcessError
 
 
 class Ansible(BotPlugin):
@@ -45,16 +46,25 @@ class Ansible(BotPlugin):
         pass
 
     @arg_botcmd('inventory', type=str, \
-                help="filename (w/o extension) of the inventory file")
+                help="filename of the inventory file")
     @arg_botcmd('playbook', type=str, \
-                help="filename (w/o extension) of the playbook file")
+                help="filename of the playbook file")
     def ansible(self, mess, inventory=None, playbook=None):
         """
         Runs specified Ansible playbook on the specific inventory
         """
         inventory_file = "".join([self.config['INVENTORY_DIR'], inventory])
         playbook_file = "".join([self.config['PLAYBOOK_DIR'], playbook])
-        return "This does nothing yet"
+        ansible_cmd = ['ansible-playbook', '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
+                        '-v', '-D', '-i', inventory_file, playbook_file]
+        # PIPE and check_output come from "subprocess" module
+        try:
+            raw_result = check_output(ansible_cmd, stderr=STDOUT)
+        except CalledProcessError, e:
+            raw_result = e.output
+        except OSError:
+            raw_result = "*ERROR*: ansible-playbook command not found"
+        return raw_result
 
     @arg_botcmd('objects', type=str, default='all', nargs='?', \
                 help="objects to list; choises are: playbooks, inventories, all (default)", \
