@@ -1,0 +1,9 @@
+[Core]
+Name = Ansible
+Module = ansible
+
+[Documentation]
+Description = An Err plugin to run Ansible commands
+
+[Python]
+Version = 2
