@@ -20,9 +20,9 @@ class Ansible(BotPlugin):
         """
         # TODO: check_configuration: check supplied plugin configuration
         self.log.debug("Checking plugin configuration: {}".format(configuration))
-        if not self.config['ANSIBLE_BASE'].endswith('/'):
-            self.config['ANSIBLE_BASE'] = \
-            "".join([self.config['ANSIBLE_BASE'],'/'])
+        if not configuration['ANSIBLE_BASE'].endswith('/'):
+            configuration['ANSIBLE_BASE'] = \
+            "".join([configuration['ANSIBLE_BASE'],'/'])
         super(Ansible, self).check_configuration()
 
     def callback_message(self, message):
