@@ -1,4 +1,4 @@
-from errbot import BotPlugin, botcmd, webhook
+from errbot import BotPlugin, arg_botcmd
 
 
 class Ansible(BotPlugin):
@@ -19,6 +19,10 @@ class Ansible(BotPlugin):
         Triggers when the configuration is checked, shortly before activation
         """
         # TODO: check_configuration: check supplied plugin configuration
+        self.log.debug("Checking plugin configuration: {}".format(configuration))
+        if not self.config['ANSIBLE_BASE'].endswith('/'):
+            self.config['ANSIBLE_BASE'] = \
+            "".join([self.config['ANSIBLE_BASE'],'/'])
         super(Ansible, self).check_configuration()
 
     def callback_message(self, message):
@@ -35,11 +39,11 @@ class Ansible(BotPlugin):
         # TODO: callback_botmessage
         pass
 
-    # Passing split_args_with=None will cause arguments to be split on any kind
-    # of whitespace, just like Python's split() does
-    @arg_botcmd('inventory', type=str, default='/etc/ansible/hosts')
-    @arg_botcmd('playbook', type=str, default='/etc/ansible/site.yml')
+    @arg_botcmd('inventory', type=str)
+    @arg_botcmd('playbook', type=str)
     def ansible(self, mess, inventory=None, playbook=None):
+        inventory_file = "".join([self.config['ANSIBLE_BASE'], inventory])
+        playbook_file = "".join([self.config['ANSIBLE_BASE'], playbook])
         """Working horse of this plugin"""
         return "This does nothing yet"
 
