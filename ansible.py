@@ -1,6 +1,5 @@
 from errbot import BotPlugin, arg_botcmd
 from os import path
-from subprocess import STDOUT, check_output, CalledProcessError
 from lib import utils
 
 class Ansible(BotPlugin):
@@ -53,6 +52,8 @@ class Ansible(BotPlugin):
         """
         Runs specified Ansible playbook on the specific inventory
         """
+
+        _from = mess.frm
         inventory_file = "".join([self.config['INVENTORY_DIR'], inventory])
         playbook_file = "".join([self.config['PLAYBOOK_DIR'], playbook])
         # path come from "os" module
@@ -62,12 +63,7 @@ class Ansible(BotPlugin):
         ansible_cmd = ['ansible-playbook', '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
                         '-v', '-D', '-i', inventory_file, playbook_file]
         # PIPE and check_output come from "subprocess" module
-        try:
-            raw_result = check_output(ansible_cmd, stderr=STDOUT)
-        except CalledProcessError, e:
-            raw_result = e.output
-        except OSError:
-            raw_result = "*ERROR*: ansible-playbook command not found"
+        raw_result = utils.run_cmd(self, ansible_cmd, _from)
         return raw_result
 
     @arg_botcmd('objects', type=str, default='all', nargs='?', \
@@ -85,3 +81,13 @@ class Ansible(BotPlugin):
         if objects is 'inventories' or objects is 'all':
             inventories = utils.myreaddir(self.config['INVENTORY_DIR'])
         return { 'playbooks': playbooks, 'inventories': inventories }
+
+    @arg_botcmd('uuid', type=str, nargs='?', \
+        help="Job UUID")
+    def jobs_info(self, mess, uuid=None):
+        """
+        Obtains various types of information about queued jobs
+        """
+        if not uuid:
+            return "Listing all jobs not implemented yet, please specify UUID of a job"
+        return utils.get_job_info(uuid)
