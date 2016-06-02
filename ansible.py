@@ -1,7 +1,7 @@
 from errbot import BotPlugin, arg_botcmd
-from os import walk, path
+from os import path
 from subprocess import STDOUT, check_output, CalledProcessError
-
+from lib import utils
 
 class Ansible(BotPlugin):
     """
@@ -80,13 +80,8 @@ class Ansible(BotPlugin):
         # TODO: make this recursive
         playbooks = []
         inventories = []
-        # walk() comes from package "os"
         if objects is 'playbooks' or objects is 'all':
-            for (dirpath, dirnames, filenames) in walk(self.config['PLAYBOOK_DIR']):
-                playbooks.extend(filenames)
-                break
+            playbooks = utils.myreaddir(self.config['PLAYBOOK_DIR'])
         if objects is 'inventories' or objects is 'all':
-            for (dirpath, dirnames, filenames) in walk(self.config['INVENTORY_DIR']):
-                inventories.extend(filenames)
-                break
+            inventories = utils.myreaddir(self.config['INVENTORY_DIR'])
         return { 'playbooks': playbooks, 'inventories': inventories }
