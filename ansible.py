@@ -1,5 +1,5 @@
 from errbot import BotPlugin, arg_botcmd
-from os import walk
+from os import walk, path
 from subprocess import STDOUT, check_output, CalledProcessError
 
 
@@ -55,6 +55,10 @@ class Ansible(BotPlugin):
         """
         inventory_file = "".join([self.config['INVENTORY_DIR'], inventory])
         playbook_file = "".join([self.config['PLAYBOOK_DIR'], playbook])
+        # path come from "os" module
+        if not path.isfile(inventory_file) or not path.isfile(playbook_file):
+            return "*ERROR*: inventory/playbook file not found (was looking for \
+                    {} {})".format(inventory_file, playbook_file)
         ansible_cmd = ['ansible-playbook', '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
                         '-v', '-D', '-i', inventory_file, playbook_file]
         # PIPE and check_output come from "subprocess" module
