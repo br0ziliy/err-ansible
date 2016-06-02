@@ -81,14 +81,12 @@ class Ansible(BotPlugin):
         playbooks = []
         inventories = []
         # walk() comes from package "os"
-        for (dirpath, dirnames, filenames) in walk(self.config['PLAYBOOK_DIR']):
-            playbooks.extend(filenames)
-            break
-        for (dirpath, dirnames, filenames) in walk(self.config['INVENTORY_DIR']):
-            inventories.extend(filenames)
-            break
-        # TODO: below code sucks rocks, but it's 11pm and I have a bottle of
-        # cold beer waiting for me.
-        if objects == 'playbooks': return { 'objects': objects, 'objlist': playbooks }
-        elif objects == 'inventories': return { 'objects': objects, 'objlist': inventories }
-        return { 'objects': 'all', 'objlist': playbooks + inventories }
+        if objects is 'playbooks' or objects is 'all':
+            for (dirpath, dirnames, filenames) in walk(self.config['PLAYBOOK_DIR']):
+                playbooks.extend(filenames)
+                break
+        if objects is 'inventories' or objects is 'all':
+            for (dirpath, dirnames, filenames) in walk(self.config['INVENTORY_DIR']):
+                inventories.extend(filenames)
+                break
+        return { 'playbooks': playbooks, 'inventories': inventories }
