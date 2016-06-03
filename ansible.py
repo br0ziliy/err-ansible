@@ -22,7 +22,7 @@ class Ansible(BotPlugin):
         """
         Defines the configuration structure this plugin supports
         """
-        # TODO: get_configuration_template: allow part of configuration changed
+
         return {'INVENTORY_DIR': u"/etc/ansible/inventory", \
                 'PLAYBOOK_DIR': u"/etc/ansible/playbooks", \
                 'ANSIBLE_SSH_KEY': u"/root/.ssh/id_rsa.pub" \
@@ -32,7 +32,7 @@ class Ansible(BotPlugin):
         """
         Triggers when the configuration is checked, shortly before activation
         """
-        # TODO: check_configuration: check supplied plugin configuration
+
         self.log.debug("Checking plugin configuration: {}".format(configuration))
         if not configuration['INVENTORY_DIR'].endswith('/'):
             configuration['INVENTORY_DIR'] = \
@@ -41,20 +41,6 @@ class Ansible(BotPlugin):
             configuration['PLAYBOOK_DIR'] = \
             "".join([configuration['PLAYBOOK_DIR'],'/'])
         super(Ansible, self).check_configuration(configuration)
-
-    def callback_message(self, message):
-        """
-        Triggered for every received message that isn't coming from the bot itself
-        """
-        # TODO: callback_message
-        pass
-
-    def callback_botmessage(self, message):
-        """
-        Triggered for every message that comes from the bot itself
-        """
-        # TODO: callback_botmessage
-        pass
 
     @arg_botcmd('inventory', type=str, \
                 help="filename of the inventory file")
@@ -85,7 +71,6 @@ class Ansible(BotPlugin):
         Lists available playbooks/inventory files
         """
 
-        # TODO: ansible_list: make this recursive
         playbooks = []
         inventories = []
         if objects is 'playbooks' or objects is 'all':

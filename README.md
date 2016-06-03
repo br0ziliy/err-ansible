@@ -15,6 +15,10 @@ Plugin will still work without Redis installed, but this way you will lose
 asynchronous capabilities, so having Redis is still highly recommended for
 production use.
 
+Plugin is known to work on following platforms/Err backends:
+
+- CentOS 7.2 / Telegram
+
 Installation
 ------------
 
@@ -27,6 +31,15 @@ the plugin (`/var/lib/err/plugins/err-ansible` by default:
 cd /var/lib/err/plugins/err-ansible
 bin/start_worker.sh
 ```
+
+Make sure the user account under which you run RQ worker is able to execute
+`ansible-playbook` command, and has read access to the directories/keyfile you
+supply in the plugin configuration dictionary (see below).
+
+Running worker from a different user than you run Errbot itself might lead to an
+unpredictalble results - i.e. if you run Errbot process under `chat_bot`
+account, you MUST run the worker under the same `chat_bot`, otherwise things
+might not work. This will be fixed [in the future](br0ziliy/err-ansible#1).
 
 Configuration
 -------------
