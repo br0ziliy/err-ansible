@@ -39,7 +39,7 @@ supply in the plugin configuration dictionary (see below).
 Running worker from a different user than you run Errbot itself might lead to an
 unpredictalble results - i.e. if you run Errbot process under `chat_bot`
 account, you MUST run the worker under the same `chat_bot`, otherwise things
-might not work. This will be fixed [in the future](br0ziliy/err-ansible#1).
+might not work. This will be fixed in the future, see br0ziliy/err-ansbile#3.
 
 Configuration
 -------------
@@ -50,9 +50,9 @@ Plugin is configured with the command below:
 
 - `ANSIBLE_SSH_KEY` - SSH key to use with `ansible-playbook -u root` command
 - `INVENTORY_DIR` - directory where inventory files are stored (subdirectories
-  are not yet supported)
+  are not yet supported, see br0ziliy/err-ansbile#2)
 - `PLAYBOOK_DIR` - directory where playbook files are stored (subdirectories are
-  not yet supported)
+  not yet supported, see br0ziliy/err-ansbile#2)
 
 Usage
 -----
