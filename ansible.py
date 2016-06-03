@@ -1,6 +1,6 @@
 from errbot import BotPlugin, arg_botcmd
 from os import path
-from lib import utils
+from lib import utils,tasks
 
 class Ansible(BotPlugin):
     """
@@ -63,7 +63,7 @@ class Ansible(BotPlugin):
                     {} {})".format(inventory_file, playbook_file)
         ansible_cmd = ['ansible-playbook', '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
                         '-v', '-D', '-i', inventory_file, playbook_file]
-        raw_result = utils.run_cmd(self, ansible_cmd, _from)
+        raw_result = tasks.run_task(self, ansible_cmd, _from)
         return raw_result
 
     @arg_botcmd('objects', type=str, default='all', nargs='?', \
@@ -92,4 +92,4 @@ class Ansible(BotPlugin):
 
         if not uuid:
             return "Listing all jobs not implemented yet, please specify UUID of a job"
-        return utils.get_task_info(uuid)
+        return tasks.get_task_info(uuid)
