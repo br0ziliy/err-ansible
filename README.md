@@ -25,7 +25,7 @@ the plugin (`/var/lib/err/plugins/err-ansible` by default:
 
 ```
 cd /var/lib/err/plugins/err-ansible
-rqworker ansible --exception-handler "lib.tasks.handle_task_exception"
+bin/start_worker.sh
 ```
 
 Configuration
