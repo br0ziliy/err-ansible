@@ -32,9 +32,9 @@ def run_cmd(bot, cmd, _from):
             raw_result = "*ERROR*: ansible-playbook command not found"
         return raw_result
 
-def get_job_info(uuid):
+def get_task_info(uuid):
     """
-    Gets job info by it's UUID
+    Gets task info by it's UUID
     """
 
     job = q.fetch_job(uuid)

@@ -11,6 +11,7 @@ class Ansible(BotPlugin):
         """
         Defines the configuration structure this plugin supports
         """
+        # TODO: get_configuration_template: allow part of configuration changed
         return {'INVENTORY_DIR': u"/etc/ansible/inventory", \
                 'PLAYBOOK_DIR': u"/etc/ansible/playbooks", \
                 'ANSIBLE_SSH_KEY': u"/root/.ssh/id_rsa.pub" \
@@ -62,7 +63,6 @@ class Ansible(BotPlugin):
                     {} {})".format(inventory_file, playbook_file)
         ansible_cmd = ['ansible-playbook', '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
                         '-v', '-D', '-i', inventory_file, playbook_file]
-        # PIPE and check_output come from "subprocess" module
         raw_result = utils.run_cmd(self, ansible_cmd, _from)
         return raw_result
 
@@ -73,7 +73,8 @@ class Ansible(BotPlugin):
         """
         Lists available playbooks/inventory files
         """
-        # TODO: make this recursive
+
+        # TODO: ansible_list: make this recursive
         playbooks = []
         inventories = []
         if objects is 'playbooks' or objects is 'all':
@@ -83,11 +84,12 @@ class Ansible(BotPlugin):
         return { 'playbooks': playbooks, 'inventories': inventories }
 
     @arg_botcmd('uuid', type=str, nargs='?', \
-        help="Job UUID")
-    def jobs_info(self, mess, uuid=None):
+        help="Task UUID")
+    def task_info(self, mess, uuid=None):
         """
-        Obtains various types of information about queued jobs
+        Obtains various types of information about queued tasks
         """
+
         if not uuid:
             return "Listing all jobs not implemented yet, please specify UUID of a job"
-        return utils.get_job_info(uuid)
+        return utils.get_task_info(uuid)
