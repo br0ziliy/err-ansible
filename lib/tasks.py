@@ -13,10 +13,14 @@ def run_task(bot, cmd, _from):
     bot will be blocked until a command returns.
     """
 
-    bot.log.info("Running {}".format(cmd))
+    bot.log.debug("Running {}".format(cmd))
     async = True
     try:
         task = q.enqueue(check_output, cmd, stderr=STDOUT)
+        tasklist = bot['tasks']
+        tasklist[task.get_id()] = _from
+        bot['tasks'] = tasklist
+        bot.log.debug("Task list: {}".format(bot['tasks']))
         return "Task enqueued: {}".format(task)
     except ConnectionError:
         bot.log.error("Error connecting to Redis, falling back to synchronous execution")
@@ -40,10 +44,7 @@ def get_task_info(uuid):
     task = q.fetch_job(uuid)
     res = task.result
     status = task.status
-    if res:
-        return "Task {}: {}\n\n{}".format(uuid, status, res)
-    else:
-        return "Task {} is still running".format(uuid)
+    return (res, status)
 
 def handle_task_exception(task, exc_type, exc_value, traceback):
     """
@@ -56,3 +57,5 @@ def handle_task_exception(task, exc_type, exc_value, traceback):
     task_id = task.get_id()
     r = task.connection
     r.hset("rq:job:{}".format(task_id),'result',dumps(output))
+
+

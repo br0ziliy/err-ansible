@@ -1,3 +1,5 @@
+# -*- coding: utf8 -*-
+
 from errbot import BotPlugin, arg_botcmd
 from os import path
 from lib import utils,tasks
@@ -6,6 +8,15 @@ class Ansible(BotPlugin):
     """
     Err plugin to run Ansible commands/playbooks
     """
+
+    def activate(self):
+        """
+        Plugin "constructor", triggers on plugin activation
+        """
+
+        # array of task UUIDs for tasks.task_poller() to watch
+        super(Ansible, self).activate()
+        self.start_poller(5, self.task_poller)
 
     def get_configuration_template(self):
         """
@@ -92,4 +103,27 @@ class Ansible(BotPlugin):
 
         if not uuid:
             return "Listing all jobs not implemented yet, please specify UUID of a job"
-        return tasks.get_task_info(uuid)
+        (result, status) = tasks.get_task_info(uuid)
+        if result:
+            return "Task {} status: {}\n\n{}".format(uuid, status, result)
+        else: return "Task {} status: {}".format(uuid, status)
+
+    def task_poller(self):
+        """
+        Polls for in-progress tasks to notify users about task completion
+        """
+
+        self.log.debug("Polling for completed tasks...")
+        if 'tasks' not in self:
+            self['tasks'] = []
+        self.log.debug("Task list: {}".format(self['tasks']))
+        tasklist = self['tasks']
+        for uuid in tasklist.keys():
+            author = tasklist[uuid]
+            (result, status) = tasks.get_task_info(uuid)
+            self.log.debug("Processing task: {}; status: {},\
+result:\n{}".format(uuid, status, result))
+            if status in ['finished', 'failed']:
+                self.send(author, "Task {} status: {}\n\n{}".format(uuid, status, result))
+                del tasklist[uuid]
+                self['tasks'] = tasklist
