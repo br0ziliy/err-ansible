@@ -20,7 +20,6 @@ def run_task(bot, cmd, _from):
         tasklist = bot['tasks']
         tasklist[task.get_id()] = _from
         bot['tasks'] = tasklist
-        bot.log.debug("Task list: {}".format(bot['tasks']))
         return "Task enqueued: {}".format(task)
     except ConnectionError:
         bot.log.error("Error connecting to Redis, falling back to synchronous execution")

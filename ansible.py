@@ -3,6 +3,7 @@
 from errbot import BotPlugin, arg_botcmd
 from os import path
 from lib import utils,tasks
+import argparse
 
 class Ansible(BotPlugin):
     """
@@ -78,6 +79,37 @@ class Ansible(BotPlugin):
         if objects is 'inventories' or objects is 'all':
             inventories = utils.myreaddir(self.config['INVENTORY_DIR'])
         return { 'playbooks': playbooks, 'inventories': inventories }
+
+    @arg_botcmd('command', type=str, nargs=argparse.REMAINDER, \
+                help="command to run on the host(s), or one of: ping, facts")
+    @arg_botcmd('inventory', type=str, \
+                help="filename of the inventory file")
+    @arg_botcmd('host', type=str, admin_only=True, \
+                help="host pattern or group name from the inventory to run the command on")
+    def ansible_cmd(self,mess,inventory=None,host=None,command=None):
+        """
+        Runs commands on remote servers using Ansible `command` module,
+        with "ping" and "facts" having special meaning.
+        """
+        _from = mess.frm
+        inventory_file = "".join([self.config['INVENTORY_DIR'], inventory])
+        command = " ".join(command)
+        self.log.debug("Got command: {} for Host: {} in Inventory: {}".format(command, host, inventory))
+        # path come from "os" module
+        if not path.isfile(inventory_file):
+            return "*ERROR*: inventory file not found (was looking for \
+                    {})".format(inventory_file)
+        if command == 'ping':
+            ansible_cmd = ['ansible', host, '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
+                            '-v', '-i', inventory_file, '-m', 'ping']
+        elif command == 'facts':
+            ansible_cmd = ['ansible', host, '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
+                            '-v', '-i', inventory_file, '-m', 'setup']
+        else:
+            ansible_cmd = ['ansible', host, '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
+                            '-v', '-i', inventory_file, '-m', 'command', '-a', command]
+        raw_result = tasks.run_task(self, ansible_cmd, _from)
+        return raw_result
 
     @arg_botcmd('uuid', type=str, nargs='?', \
         help="Task UUID")
