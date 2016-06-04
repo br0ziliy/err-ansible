@@ -19,6 +19,10 @@ Plugin is known to work on following platforms/Err backends:
 
 - CentOS 7.2 / Telegram
 
+Plugin *does not work* with the below backends:
+
+- Slack (`class SlackPerson` is not pickle-able)
+
 Installation
 ------------
 
