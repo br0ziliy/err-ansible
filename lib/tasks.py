@@ -18,7 +18,10 @@ def run_task(bot, cmd, _from):
     try:
         task = q.enqueue(check_output, cmd, stderr=STDOUT)
         tasklist = bot['tasks']
-        tasklist[task.get_id()] = _from
+        # need to get string representation of Identity here, since storing of
+        # the class itself does not work for every backend, see
+        # https://github.com/errbotio/errbot/issues/771 for details
+        tasklist[task.get_id()] = str(_from)
         bot['tasks'] = tasklist
         return "Task enqueued: {}".format(task)
     except ConnectionError:

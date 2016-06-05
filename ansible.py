@@ -141,6 +141,6 @@ class Ansible(BotPlugin):
             self.log.debug("Processing task: {}; status: {},\
 result:\n{}".format(uuid, status, result))
             if status in ['finished', 'failed']:
-                self.send(author, "Task {} status: {}\n\n{}".format(uuid, status, result))
+                self.send(self.build_identifier(author), "Task {} status: {}\n\n{}".format(uuid, status, result))
                 del tasklist[uuid]
                 self['tasks'] = tasklist
