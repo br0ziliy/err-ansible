@@ -23,7 +23,7 @@ def run_task(bot, cmd, _from):
         # https://github.com/errbotio/errbot/issues/771 for details
         tasklist[task.get_id()] = str(_from)
         bot['tasks'] = tasklist
-        return "Task enqueued: {}".format(task)
+        return "Task enqueued: {}".format(task.get_id())
     except ConnectionError:
         bot.log.error("Error connecting to Redis, falling back to synchronous execution")
         async = False
