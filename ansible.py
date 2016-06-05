@@ -84,7 +84,7 @@ class Ansible(BotPlugin):
                 help="command to run on the host(s), or one of: ping, facts")
     @arg_botcmd('inventory', type=str, \
                 help="filename of the inventory file")
-    @arg_botcmd('host', type=str, admin_only=True, \
+    @arg_botcmd('host', type=str, \
                 help="host pattern or group name from the inventory to run the command on")
     def ansible_cmd(self,mess,inventory=None,host=None,command=None):
         """
