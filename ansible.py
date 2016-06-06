@@ -132,7 +132,7 @@ class Ansible(BotPlugin):
 
         self.log.debug("Polling for completed tasks...")
         if 'tasks' not in self:
-            self['tasks'] = []
+            self['tasks'] = {}
         self.log.debug("Task list: {}".format(self['tasks']))
         tasklist = self['tasks']
         for uuid in tasklist.keys():
