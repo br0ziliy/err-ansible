@@ -4,7 +4,7 @@ from redis import ConnectionError
 from pickle import dumps
 
 use_connection()
-q = Queue('ansible')
+Q = Queue('ansible')
 
 def run_task(bot, cmd, _from):
     """
@@ -16,7 +16,7 @@ def run_task(bot, cmd, _from):
     bot.log.debug("Running {}".format(cmd))
     async = True
     try:
-        task = q.enqueue(check_output, cmd, stderr=STDOUT)
+        task = Q.enqueue(check_output, cmd, stderr=STDOUT)
         tasklist = bot['tasks']
         # need to get string representation of Identity here, since storing of
         # the class itself does not work for every backend, see
@@ -29,11 +29,11 @@ def run_task(bot, cmd, _from):
         async = False
     if not async:
         # notify also chatrooms and/or bot admins
-        bot.send(_from,"Running the task synchronously, whole bot blocked now, please wait.")
+        bot.send(_from, "Running the task synchronously, whole bot blocked now, please wait.")
         try:
             raw_result = check_output(cmd, stderr=STDOUT)
-        except CalledProcessError, e:
-            raw_result = e.output
+        except CalledProcessError, exc:
+            raw_result = exc.output
         except OSError:
             raw_result = "*ERROR*: ansible-playbook command not found"
         return raw_result
@@ -43,7 +43,7 @@ def get_task_info(uuid):
     Gets task info by it's UUID
     """
 
-    task = q.fetch_job(uuid)
+    task = Q.fetch_job(uuid)
     res = task.result
     status = task.status
     return (res, status)
@@ -57,7 +57,7 @@ def handle_task_exception(task, exc_type, exc_value, traceback):
     """
     output = exc_value.output
     task_id = task.get_id()
-    r = task.connection
-    r.hset("rq:job:{}".format(task_id),'result',dumps(output))
+    redis = task.connection
+    redis.hset("rq:job:{}".format(task_id), 'result', dumps(output))
 
 

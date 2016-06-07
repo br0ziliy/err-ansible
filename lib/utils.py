@@ -11,11 +11,12 @@ def myreaddir(directory):
     for (dirpath, dirnames, filenames) in walk(directory):
         array.extend(filenames)
         break
-    for idx, f in enumerate(filenames):
-        myfile = "".join([directory,f])
-        with open(myfile, 'r') as fh:
-            line = fh.readline()
-            if line.startswith('#'): filenames[idx] = "".join([f," - ",line.rstrip()])
+    for idx, fname in enumerate(filenames):
+        myfile = "".join([directory, fname])
+        with open(myfile, 'r') as fhandle:
+            line = fhandle.readline()
+            if line.startswith('#'):
+                filenames[idx] = "".join([fname, " - ", line.rstrip()])
         array = filenames
     return array
 

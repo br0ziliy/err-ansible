@@ -2,8 +2,14 @@
 
 from errbot import BotPlugin, arg_botcmd
 from os import path
-from lib import utils,tasks
+from lib import utils, tasks
+from itertools import chain
 import argparse
+
+CONFIG_TEMPLATE = {'INVENTORY_DIR': u"/etc/ansible/inventory",
+                   'PLAYBOOK_DIR': u"/etc/ansible/playbooks",
+                   'ANSIBLE_SSH_KEY': u"/root/.ssh/id_rsa.pub",
+                   'ANSIBLE_REMOTE_USER': u"root"}
 
 class Ansible(BotPlugin):
     """
@@ -19,15 +25,25 @@ class Ansible(BotPlugin):
         super(Ansible, self).activate()
         self.start_poller(5, self.task_poller)
 
+    def configure(self, configuration):
+        """
+        Creates a Python dictionary object which contains all the values from our
+        CONFIG_TEMPLATE and then updates that dictionary with the configuration
+        received when calling the "!plugin config Ansible" command.
+        """
+
+        if configuration is not None and configuration != {}:
+            config = dict(chain(CONFIG_TEMPLATE.items(),
+                                configuration.items()))
+        else:
+            config = CONFIG_TEMPLATE
+        super(Ansible, self).configure(config)
+
     def get_configuration_template(self):
         """
         Defines the configuration structure this plugin supports
         """
-
-        return {'INVENTORY_DIR': u"/etc/ansible/inventory", \
-                'PLAYBOOK_DIR': u"/etc/ansible/playbooks", \
-                'ANSIBLE_SSH_KEY': u"/root/.ssh/id_rsa.pub" \
-               }
+        return CONFIG_TEMPLATE
 
     def check_configuration(self, configuration):
         """
@@ -37,15 +53,15 @@ class Ansible(BotPlugin):
         self.log.debug("Checking plugin configuration: {}".format(configuration))
         if not configuration['INVENTORY_DIR'].endswith('/'):
             configuration['INVENTORY_DIR'] = \
-            "".join([configuration['INVENTORY_DIR'],'/'])
+            "".join([configuration['INVENTORY_DIR'], '/'])
         if not configuration['PLAYBOOK_DIR'].endswith('/'):
             configuration['PLAYBOOK_DIR'] = \
-            "".join([configuration['PLAYBOOK_DIR'],'/'])
+            "".join([configuration['PLAYBOOK_DIR'], '/'])
         super(Ansible, self).check_configuration(configuration)
 
-    @arg_botcmd('inventory', type=str, \
+    @arg_botcmd('inventory', type=str,
                 help="filename of the inventory file")
-    @arg_botcmd('playbook', type=str, \
+    @arg_botcmd('playbook', type=str,
                 help="filename of the playbook file")
     def ansible(self, mess, inventory=None, playbook=None):
         """
@@ -55,19 +71,22 @@ class Ansible(BotPlugin):
         _from = mess.frm
         inventory_file = "".join([self.config['INVENTORY_DIR'], inventory])
         playbook_file = "".join([self.config['PLAYBOOK_DIR'], playbook])
+        ssh_key = self.config['ANSIBLE_SSH_KEY']
+        remote_user = self.config['ANSIBLE_REMOTE_USER']
+
         # path come from "os" module
         if not path.isfile(inventory_file) or not path.isfile(playbook_file):
             return "*ERROR*: inventory/playbook file not found (was looking for \
                     {} {})".format(inventory_file, playbook_file)
-        ansible_cmd = ['ansible-playbook', '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
-                        '-v', '-D', '-i', inventory_file, playbook_file]
+        ansible_cmd = ['ansible-playbook', '-u', remote_user, '--private-key', ssh_key,
+                       '-v', '-D', '-i', inventory_file, playbook_file]
         raw_result = tasks.run_task(self, ansible_cmd, _from)
         return raw_result
 
-    @arg_botcmd('objects', type=str, default='all', nargs='?', \
-                help="objects to list; choises are: playbooks, inventories, all (default)", \
+    @arg_botcmd('objects', type=str, default='all', nargs='?',
+                help="objects to list; choises are: playbooks, inventories, all (default)",
                 template='list_objects')
-    def ansible_list(self, mess, objects=None):
+    def ansible_list(self, mess=None, objects=None):
         """
         Lists available playbooks/inventory files
         """
@@ -78,41 +97,44 @@ class Ansible(BotPlugin):
             playbooks = utils.myreaddir(self.config['PLAYBOOK_DIR'])
         if objects is 'inventories' or objects is 'all':
             inventories = utils.myreaddir(self.config['INVENTORY_DIR'])
-        return { 'playbooks': playbooks, 'inventories': inventories }
+        return {'playbooks': playbooks, 'inventories': inventories}
 
-    @arg_botcmd('command', type=str, nargs=argparse.REMAINDER, \
+    @arg_botcmd('command', type=str, nargs=argparse.REMAINDER,
                 help="command to run on the host(s), or one of: ping, facts")
-    @arg_botcmd('inventory', type=str, \
+    @arg_botcmd('inventory', type=str,
                 help="filename of the inventory file")
-    @arg_botcmd('host', type=str, \
+    @arg_botcmd('host', type=str,
                 help="host pattern or group name from the inventory to run the command on")
-    def ansible_cmd(self,mess,inventory=None,host=None,command=None):
+    def ansible_cmd(self, mess, inventory=None, host=None, command=None):
         """
         Runs commands on remote servers using Ansible `command` module,
         with "ping" and "facts" having special meaning.
         """
+
+        self.log.debug("Got command: {} for Host: {} "
+                       "in Inventory: {}".format(command, host, inventory))
         _from = mess.frm
-        inventory_file = "".join([self.config['INVENTORY_DIR'], inventory])
         command = " ".join(command)
-        self.log.debug("Got command: {} for Host: {} in Inventory: {}".format(command, host, inventory))
+        ssh_key = self.config['ANSIBLE_SSH_KEY']
+        remote_user = self.config['ANSIBLE_REMOTE_USER']
+        inventory_file = "".join([self.config['INVENTORY_DIR'], inventory])
         # path come from "os" module
         if not path.isfile(inventory_file):
             return "*ERROR*: inventory file not found (was looking for \
                     {})".format(inventory_file)
+        ansible_cmd = ['ansible', host, '-u', remote_user, '--private-key', ssh_key,
+                       '-v', '-i', inventory_file, '-m']
         if command == 'ping':
-            ansible_cmd = ['ansible', host, '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
-                            '-v', '-i', inventory_file, '-m', 'ping']
+            ansible_cmd.extend(['ping'])
         elif command == 'facts':
-            ansible_cmd = ['ansible', host, '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
-                            '-v', '-i', inventory_file, '-m', 'setup']
+            ansible_cmd.extend(['setup'])
         else:
-            ansible_cmd = ['ansible', host, '-u', 'root', '--private-key', self.config['ANSIBLE_SSH_KEY'], \
-                            '-v', '-i', inventory_file, '-m', 'command', '-a', command]
+            ansible_cmd.extend(['command', '-a', command])
         raw_result = tasks.run_task(self, ansible_cmd, _from)
         return raw_result
 
-    @arg_botcmd('uuid', type=str, nargs='?', \
-        help="Task UUID")
+    @arg_botcmd('uuid', type=str, nargs='?',
+                help="Task UUID")
     def task_info(self, mess, uuid=None):
         """
         Obtains various types of information about queued tasks
@@ -138,9 +160,11 @@ class Ansible(BotPlugin):
         for uuid in tasklist.keys():
             author = tasklist[uuid]
             (result, status) = tasks.get_task_info(uuid)
-            self.log.debug("Processing task: {}; status: {},\
-result:\n{}".format(uuid, status, result))
+            self.log.debug("Processing task: {}; status: {},"
+                           "result:\n{}".format(uuid, status, result))
             if status in ['finished', 'failed']:
-                self.send(self.build_identifier(author), "Task {} status: {}\n\n{}".format(uuid, status, result))
+                self.send(self.build_identifier(author),
+                          "Task {} status: {}\n\n{}".format(
+                              uuid, status, result))
                 del tasklist[uuid]
                 self['tasks'] = tasklist

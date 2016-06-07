@@ -1,4 +1,5 @@
 {%- if playbooks is defined %}
+
 Playbooks:
 
 ```
@@ -8,6 +9,7 @@ Playbooks:
 ```
 {%- endif %}
 {%- if inventories is defined %}
+
 Inventory files:
 
 ```
