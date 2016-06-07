@@ -44,11 +44,21 @@ might not work. This will be fixed in the future, see br0ziliy/err-ansbile#3.
 Configuration
 -------------
 
-Plugin is configured with the command below:
+Plugin is configured with the commands below:
 
-`!plugin config Ansible {'ANSIBLE_SSH_KEY': u'/home/devops_bot/.ssh/id_rsa', 'INVENTORY_DIR': u'/etc/ansible/inventory', 'PLAYBOOK_DIR': u'/etc/ansible/playbooks'}`
+- initial configuration:
 
-- `ANSIBLE_SSH_KEY` - SSH key to use with `ansible-playbook -u root` command
+`!plugin config Ansible {'ANSIBLE_SSH_KEY': u'/home/devops_bot/.ssh/id_rsa', 'INVENTORY_DIR': u'/etc/ansible/inventory', 'PLAYBOOK_DIR': u'/etc/ansible/playbooks', 'ANSIBLE_REMOTE_USER': 'root'}`
+
+- if you want to change some parameter later:
+
+`!plugin config Ansible {'ANSIBLE_REMOTE_USER': 'deploy_user'}`
+
+Available parameters:
+
+- `ANSIBLE_SSH_KEY` - SSH key to use with `ansible-playbook` command
+- `ANSIBLE_REMOTE_USER` - SSH user Ansible will use to authenticate to the
+    machines.
 - `INVENTORY_DIR` - directory where inventory files are stored (subdirectories
   are not yet supported, see br0ziliy/err-ansbile#2)
 - `PLAYBOOK_DIR` - directory where playbook files are stored (subdirectories are
