@@ -59,7 +59,7 @@ class Ansible(BotPlugin):
             "".join([configuration['PLAYBOOK_DIR'], '/'])
         super(Ansible, self).check_configuration(configuration)
 
-    @arg_botcmd('variables', type=str, nargs=argparse.REMAINDER, default=None
+    @arg_botcmd('variables', type=str, nargs=argparse.REMAINDER, default=None,
                 help="optional playbook variables")
     @arg_botcmd('inventory', type=str,
                 help="filename of the inventory file")
