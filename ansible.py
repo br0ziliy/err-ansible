@@ -59,6 +59,8 @@ class Ansible(BotPlugin):
             "".join([configuration['PLAYBOOK_DIR'], '/'])
         super(Ansible, self).check_configuration(configuration)
 
+    @arg_botcmd('variables', type=str, nargs=argparse.REMAINDER, default=None
+                help="optional playbook variables")
     @arg_botcmd('inventory', type=str,
                 help="filename of the inventory file")
     @arg_botcmd('playbook', type=str,
@@ -80,6 +82,8 @@ class Ansible(BotPlugin):
                     {} {})".format(inventory_file, playbook_file)
         ansible_cmd = ['ansible-playbook', '-u', remote_user, '--private-key', ssh_key,
                        '-v', '-D', '-i', inventory_file, playbook_file]
+        if variables:
+            ansible_cmd.extend(['-e', variables])
         raw_result = tasks.run_task(self, ansible_cmd, _from)
         return raw_result
 
