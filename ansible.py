@@ -65,7 +65,7 @@ class Ansible(BotPlugin):
                 help="filename of the inventory file")
     @arg_botcmd('playbook', type=str,
                 help="filename of the playbook file")
-    def ansible(self, mess, inventory=None, playbook=None):
+    def ansible(self, mess, inventory=None, playbook=None, variables=None):
         """
         Runs specified Ansible playbook on the specific inventory
         """
