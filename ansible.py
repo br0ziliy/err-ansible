@@ -83,7 +83,7 @@ class Ansible(BotPlugin):
         ansible_cmd = ['ansible-playbook', '-u', remote_user, '--private-key', ssh_key,
                        '-v', '-D', '-i', inventory_file, playbook_file]
         if variables:
-            ansible_cmd.extend(['-e', variables])
+            ansible_cmd.extend(['-e', " ".join(variables)])
         raw_result = tasks.run_task(self, ansible_cmd, _from)
         return raw_result
 
