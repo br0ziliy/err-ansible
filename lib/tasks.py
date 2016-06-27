@@ -6,7 +6,7 @@ from pickle import dumps
 use_connection()
 Q = Queue('ansible')
 
-def run_task(bot, cmd, _from):
+def run_task(bot, cmd, _from, timeout = 180):
     """
     Runs specified command synchronously (if Redis is running) or
     asynchronously (this is not recommended for production use since the whole
@@ -16,7 +16,8 @@ def run_task(bot, cmd, _from):
     bot.log.debug("Running {}".format(cmd))
     async = True
     try:
-        task = Q.enqueue(check_output, cmd, stderr=STDOUT)
+        task = Q.enqueue(check_output, cmd, stderr=STDOUT,
+                         timeout=timeout)
         tasklist = bot['tasks']
         # need to get string representation of Identity here, since storing of
         # the class itself does not work for every backend, see
@@ -32,7 +33,7 @@ def run_task(bot, cmd, _from):
         bot.send(_from, "Running the task synchronously, whole bot blocked now, please wait.")
         try:
             raw_result = check_output(cmd, stderr=STDOUT)
-        except CalledProcessError, exc:
+        except CalledProcessError as exc:
             raw_result = exc.output
         except OSError:
             raw_result = "*ERROR*: ansible-playbook command not found"

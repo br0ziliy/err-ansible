@@ -9,7 +9,8 @@ import argparse
 CONFIG_TEMPLATE = {'INVENTORY_DIR': u"/etc/ansible/inventory",
                    'PLAYBOOK_DIR': u"/etc/ansible/playbooks",
                    'ANSIBLE_SSH_KEY': u"/root/.ssh/id_rsa.pub",
-                   'ANSIBLE_REMOTE_USER': u"root"}
+                   'ANSIBLE_REMOTE_USER': u"root",
+                   'ANSIBLE_BIN_DIR': u'/usr/bin'}
 
 class Ansible(BotPlugin):
     """
@@ -61,11 +62,14 @@ class Ansible(BotPlugin):
 
     @arg_botcmd('variables', type=str, nargs=argparse.REMAINDER, default=None,
                 help="optional playbook variables")
+    @arg_botcmd('timeout', type=int,
+                help="Timout for playbook execution")
     @arg_botcmd('inventory', type=str,
                 help="filename of the inventory file")
     @arg_botcmd('playbook', type=str,
                 help="filename of the playbook file")
-    def ansible(self, mess, inventory=None, playbook=None, variables=None):
+    def ansible(self, mess, inventory=None, playbook=None, timeout=180,
+                variables=None):
         """
         Runs specified Ansible playbook on the specific inventory
         """
@@ -75,16 +79,18 @@ class Ansible(BotPlugin):
         playbook_file = "".join([self.config['PLAYBOOK_DIR'], playbook])
         ssh_key = self.config['ANSIBLE_SSH_KEY']
         remote_user = self.config['ANSIBLE_REMOTE_USER']
-
+        ansible_bin = path.join(self.config['ANSIBLE_BIN_DIR'],
+                                   u'ansible-playbook')
         # path come from "os" module
         if not path.isfile(inventory_file) or not path.isfile(playbook_file):
             return "*ERROR*: inventory/playbook file not found (was looking for \
                     {} {})".format(inventory_file, playbook_file)
-        ansible_cmd = ['ansible-playbook', '-u', remote_user, '--private-key', ssh_key,
+        ansible_cmd = [ansible_bin, '-u', remote_user, '--private-key', ssh_key,
                        '-v', '-D', '-i', inventory_file, playbook_file]
         if variables:
             ansible_cmd.extend(['-e', " ".join(variables)])
-        raw_result = tasks.run_task(self, ansible_cmd, _from)
+        self.log.info("Running task with timeout of : %d" % timeout)
+        raw_result = tasks.run_task(self, ansible_cmd, _from, timeout)
         return raw_result
 
     @arg_botcmd('objects', type=str, default='all', nargs='?',
@@ -122,11 +128,14 @@ class Ansible(BotPlugin):
         ssh_key = self.config['ANSIBLE_SSH_KEY']
         remote_user = self.config['ANSIBLE_REMOTE_USER']
         inventory_file = "".join([self.config['INVENTORY_DIR'], inventory])
+        ansible_bin = path.join(self.config['ANSIBLE_BIN_DIR'],
+                                   u'ansible')
+        self.log.debug("Full path to ansible command is: %s" % ansible_bin)
         # path come from "os" module
         if not path.isfile(inventory_file):
             return "*ERROR*: inventory file not found (was looking for \
                     {})".format(inventory_file)
-        ansible_cmd = ['ansible', host, '-u', remote_user, '--private-key', ssh_key,
+        ansible_cmd = [ansible_bin, host, '-u', remote_user, '--private-key', ssh_key,
                        '-v', '-i', inventory_file, '-m']
         if command == 'ping':
             ansible_cmd.extend(['ping'])
@@ -161,7 +170,7 @@ class Ansible(BotPlugin):
             self['tasks'] = {}
         self.log.debug("Task list: {}".format(self['tasks']))
         tasklist = self['tasks']
-        for uuid in tasklist.keys():
+        for uuid in list(tasklist.keys()):
             author = tasklist[uuid]
             (result, status) = tasks.get_task_info(uuid)
             self.log.debug("Processing task: {}; status: {},"
