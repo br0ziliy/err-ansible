@@ -63,7 +63,7 @@ class Ansible(BotPlugin):
     @arg_botcmd('variables', type=str, nargs=argparse.REMAINDER, default=None,
                 help="optional playbook variables")
     @arg_botcmd('timeout', type=int,
-                help="Timout for playbook execution")
+                help="Timeout for playbook execution")
     @arg_botcmd('inventory', type=str,
                 help="filename of the inventory file")
     @arg_botcmd('playbook', type=str,
