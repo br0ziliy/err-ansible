@@ -1,21 +1,16 @@
 {%- if playbooks is defined %}
-
 Playbooks:
 
-```
-{% for obj in playbooks %}
-    * {{ obj }}
-{%- endfor %}
-```
-{%- endif %}
-{%- if inventories is defined %}
+Filename | Comment
+------------------
+{% for obj in playbooks %}{{ obj.fname }} | {{ obj.comment }}
+{% endfor %}{% endif %}
 
+{%- if inventories is defined %}
 Inventory files:
 
-```
-{% for obj in inventories %}
-    * {{ obj }}
-{%- endfor %}
-```
-{%- endif %}
+Filename | Comment
+------------------
+{% for obj in inventories %}{{ obj.fname }} | {{ obj.comment }}
+{% endfor %}{% endif %}
 

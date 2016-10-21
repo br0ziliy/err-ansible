@@ -1,4 +1,4 @@
-from os import walk
+from os import walk, path
 
 def myreaddir(directory):
     """
@@ -7,16 +7,20 @@ def myreaddir(directory):
     """
 
     array = []
-    # walk() comes from "os" module
+    # walk() and path() come from "os" module
     for (dirpath, dirnames, filenames) in walk(directory):
-        array.extend(filenames)
-        break
-    for idx, fname in enumerate(filenames):
-        myfile = "".join([directory, fname])
-        with open(myfile, 'r') as fhandle:
+        for fil in filenames:
+            obj = {'fname': path.join(dirpath, fil), 'comment': ""}
+            array.append(obj)
+    for idx, obj in enumerate(array):
+        fname = obj['fname']
+        with open(fname, 'r') as fhandle:
             line = fhandle.readline()
             if line.startswith('#'):
-                filenames[idx] = "".join([fname, " - ", line.rstrip()])
-        array = filenames
+                obj['comment'] = line.rstrip()
+                array[idx] = obj
+            absname = array[idx]['fname']
+            relname = absname[len(directory)+1:]
+            array[idx]['fname'] = relname
     return array
 
