@@ -95,7 +95,7 @@ class Ansible(BotPlugin):
 
     @arg_botcmd('objects', type=str, default='all', nargs='?',
                 help="objects to list; choises are: playbooks, inventories, all (default)",
-                template=utils.get_template(self))
+                template=utils.get_template(self, 'list_objects'))
     def ansible_list(self, mess=None, objects=None):
         """
         Lists available playbooks/inventory files
