@@ -1,4 +1,5 @@
 from os import walk, path
+from errbot.templating import tenv
 
 def myreaddir(directory):
     """
@@ -24,3 +25,11 @@ def myreaddir(directory):
             array[idx]['fname'] = relname
     return array
 
+def get_template(bot, func):
+    """ Selects a template based on the current backend """
+    backend = bot._bot.mode
+    templates = [
+        "".join([backend, "_", func, ".md"]),
+        "".join(["default_", func, ".md"])
+    ]
+    return tenv().get_or_select_template(templates).name
