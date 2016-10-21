@@ -25,9 +25,8 @@ def myreaddir(directory):
             array[idx]['fname'] = relname
     return array
 
-def get_template(bot, func):
+def get_template(backend, func):
     """ Selects a template based on the current backend """
-    backend = bot._bot.mode
     templates = [
         "".join([backend, "_", func, ".md"]),
         "".join(["default_", func, ".md"])

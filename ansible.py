@@ -95,7 +95,7 @@ class Ansible(BotPlugin):
 
     @arg_botcmd('objects', type=str, default='all', nargs='?',
                 help="objects to list; choises are: playbooks, inventories, all (default)",
-                template=utils.get_template(self, 'list_objects'))
+                template='list_objects')
     def ansible_list(self, mess=None, objects=None):
         """
         Lists available playbooks/inventory files
@@ -103,11 +103,12 @@ class Ansible(BotPlugin):
 
         playbooks = []
         inventories = []
+        backend = self._bot.mode
         if objects is 'playbooks' or objects is 'all':
             playbooks = utils.myreaddir(self.config['PLAYBOOK_DIR'])
         if objects is 'inventories' or objects is 'all':
             inventories = utils.myreaddir(self.config['INVENTORY_DIR'])
-        return {'playbooks': playbooks, 'inventories': inventories}
+        return {'playbooks': playbooks, 'inventories': inventories, 'backend': backend}
 
     @arg_botcmd('command', type=str, nargs=argparse.REMAINDER,
                 help="command to run on the host(s), or one of: ping, facts")
