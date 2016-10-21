@@ -80,7 +80,7 @@ class Ansible(BotPlugin):
         ssh_key = self.config['ANSIBLE_SSH_KEY']
         remote_user = self.config['ANSIBLE_REMOTE_USER']
         ansible_bin = path.join(self.config['ANSIBLE_BIN_DIR'],
-                                   u'ansible-playbook')
+                                u'ansible-playbook')
         # path come from "os" module
         if not path.isfile(inventory_file) or not path.isfile(playbook_file):
             return "*ERROR*: inventory/playbook file not found (was looking for \
@@ -129,7 +129,7 @@ class Ansible(BotPlugin):
         remote_user = self.config['ANSIBLE_REMOTE_USER']
         inventory_file = "".join([self.config['INVENTORY_DIR'], inventory])
         ansible_bin = path.join(self.config['ANSIBLE_BIN_DIR'],
-                                   u'ansible')
+                                u'ansible')
         self.log.debug("Full path to ansible command is: %s" % ansible_bin)
         # path come from "os" module
         if not path.isfile(inventory_file):
@@ -170,14 +170,20 @@ class Ansible(BotPlugin):
             self['tasks'] = {}
         self.log.debug("Task list: {}".format(self['tasks']))
         tasklist = self['tasks']
-        for uuid in list(tasklist.keys()):
+        for uuid in list(tasklist):
             author = tasklist[uuid]
             (result, status) = tasks.get_task_info(uuid)
             self.log.debug("Processing task: {}; status: {},"
                            "result:\n{}".format(uuid, status, result))
-            if status in ['finished', 'failed']:
+            if status in ['finished', 'failed'] and result:
                 self.send(self.build_identifier(author),
                           "Task {} status: {}\n\n{}".format(
                               uuid, status, result))
                 del tasklist[uuid]
                 self['tasks'] = tasklist
+            else:
+                self.log.debug("Task {} looks weird, ignoring. Status: {}"
+                               "Result: {}".format(uuid, status, result))
+                del tasklist[uuid]
+                self['tasks'] = tasklist
+

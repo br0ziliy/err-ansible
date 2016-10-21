@@ -1,7 +1,8 @@
 from subprocess import check_output, STDOUT, CalledProcessError
+import pickle
+pickle.HIGHEST_PROTOCOL = 2
 from rq import Queue, use_connection
 from redis import ConnectionError
-from pickle import dumps
 
 use_connection()
 Q = Queue('ansible')
@@ -17,7 +18,7 @@ def run_task(bot, cmd, _from, timeout = 180):
     async = True
     try:
         task = Q.enqueue(check_output, cmd, stderr=STDOUT,
-                         timeout=timeout)
+                         timeout=timeout, ttl=60)
         tasklist = bot['tasks']
         # need to get string representation of Identity here, since storing of
         # the class itself does not work for every backend, see
@@ -45,8 +46,12 @@ def get_task_info(uuid):
     """
 
     task = Q.fetch_job(uuid)
-    res = task.result
-    status = task.status
+    try:
+      res = task.result
+      status = task.status
+    except AttributeError:
+      res = None
+      status = 'unknown'
     return (res, status)
 
 def handle_task_exception(task, exc_type, exc_value, traceback):
@@ -59,6 +64,6 @@ def handle_task_exception(task, exc_type, exc_value, traceback):
     output = exc_value.output
     task_id = task.get_id()
     redis = task.connection
-    redis.hset("rq:job:{}".format(task_id), 'result', dumps(output))
+    redis.hset("rq:job:{}".format(task_id), 'result', pickle.dumps(output))
 
 

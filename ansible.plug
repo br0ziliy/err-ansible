@@ -6,7 +6,7 @@ module = ansible
 description = An Err plugin to run Ansible commands
 
 [Python]
-version = 2+
+version = 3+
 
 [Errbot]
-min = 4.1.3
+min = 4.3.3
