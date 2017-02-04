@@ -60,23 +60,23 @@ class Ansible(BotPlugin):
             "".join([configuration['PLAYBOOK_DIR'], '/'])
         super(Ansible, self).check_configuration(configuration)
 
-    @arg_botcmd('variables', type=str, nargs=argparse.REMAINDER, default=None,
+    @arg_botcmd('--variables', dest='variables', type=str, nargs=argparse.REMAINDER, default=None,
                 help="optional playbook variables")
-    @arg_botcmd('timeout', type=int,
+    @arg_botcmd('--timeout', dest='timeout', type=int, default=180,
                 help="Timeout for playbook execution")
     @arg_botcmd('inventory', type=str,
                 help="filename of the inventory file")
     @arg_botcmd('playbook', type=str,
                 help="filename of the playbook file")
-    def ansible(self, mess, inventory=None, playbook=None, timeout=180,
+    def ansible(self, mess, inventory=None, playbook=None, timeout=None,
                 variables=None):
         """
         Runs specified Ansible playbook on the specific inventory
         """
 
         _from = mess.frm
-        inventory_file = "".join([self.config['INVENTORY_DIR'], inventory])
-        playbook_file = "".join([self.config['PLAYBOOK_DIR'], playbook])
+        inventory_file = "/".join([self.config['INVENTORY_DIR'], inventory])
+        playbook_file = "/".join([self.config['PLAYBOOK_DIR'], playbook])
         ssh_key = self.config['ANSIBLE_SSH_KEY']
         remote_user = self.config['ANSIBLE_REMOTE_USER']
         ansible_bin = path.join(self.config['ANSIBLE_BIN_DIR'],
@@ -148,7 +148,7 @@ class Ansible(BotPlugin):
         return raw_result
 
     @arg_botcmd('uuid', type=str, nargs='?',
-                help="Task UUID")
+                help="Task UUID", template='task_info')
     def task_info(self, mess, uuid=None):
         """
         Obtains various types of information about queued tasks
@@ -157,9 +157,7 @@ class Ansible(BotPlugin):
         if not uuid:
             return "Listing all jobs not implemented yet, please specify UUID of a job"
         (result, status) = tasks.get_task_info(uuid)
-        if result:
-            return "Task {} status: {}\n\n{}".format(uuid, status, result)
-        else: return "Task {} status: {}".format(uuid, status)
+        return {'uuid': uuid, 'status': status, 'task_info': result}
 
     def task_poller(self):
         """
@@ -174,16 +172,17 @@ class Ansible(BotPlugin):
         for uuid in list(tasklist):
             author = tasklist[uuid]
             (result, status) = tasks.get_task_info(uuid)
-            self.log.debug("Processing task: {}; status: {},"
+            self.log.debug("Processing task: {}; status: {}, "
                            "result:\n{}".format(uuid, status, result))
             if status in ['finished', 'failed'] and result:
-                self.send(self.build_identifier(author),
-                          "Task {} status: {}\n\n{}".format(
-                              uuid, status, result))
+                self.send_templated(self.build_identifier(author),
+                                    'task_info', {'uuid': uuid, 'status': status, 'task_info': result})
                 del tasklist[uuid]
                 self['tasks'] = tasklist
+            elif status == 'started':
+                self.log.debug("Task {} is still in progress, status: {}".format(uuid, status))
             else:
-                self.log.debug("Task {} looks weird, ignoring. Status: {}"
+                self.log.debug("Task {} looks weird, will not track it anymore. Status: {} "
                                "Result: {}".format(uuid, status, result))
                 del tasklist[uuid]
                 self['tasks'] = tasklist

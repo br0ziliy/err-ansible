@@ -1,4 +1,5 @@
 from os import walk, path
+import codecs
 from errbot.templating import tenv
 
 def myreaddir(directory):
@@ -10,18 +11,22 @@ def myreaddir(directory):
     array = []
     # walk() and path() come from "os" module
     for (dirpath, dirnames, filenames) in walk(directory):
+        try:
+          dirnames.remove('roles')
+        except ValueError:
+          pass
         for fil in filenames:
             obj = {'fname': path.join(dirpath, fil), 'comment': ""}
             array.append(obj)
     for idx, obj in enumerate(array):
         fname = obj['fname']
-        with open(fname, 'r') as fhandle:
+        with codecs.open(fname, 'r', encoding='utf-8', errors='ignore') as fhandle:
             line = fhandle.readline()
             if line.startswith('#'):
                 obj['comment'] = line.rstrip()
                 array[idx] = obj
             absname = array[idx]['fname']
-            relname = absname[len(directory)+1:]
+            relname = absname[len(directory):]
             array[idx]['fname'] = relname
     return array
 
