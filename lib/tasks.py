@@ -20,12 +20,9 @@ def run_task(bot, cmd, _from, timeout = 180):
         task = Q.enqueue(check_output, cmd, stderr=STDOUT,
                          timeout=timeout, ttl=60)
         tasklist = bot['tasks']
-        # need to get string representation of Identity here, since storing of
-        # the class itself does not work for every backend, see
-        # https://github.com/errbotio/errbot/issues/771 for details
-        tasklist[task.get_id()] = str(_from)
+        tasklist[task.get_id()] = _from
         bot['tasks'] = tasklist
-        return "Task enqueued: {}".format(task.get_id())
+        return "Task '{}' enqueued as {}".format(str(_from), task.get_id())
     except ConnectionError:
         bot.log.error("Error connecting to Redis, falling back to synchronous execution")
         async = False

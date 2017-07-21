@@ -74,7 +74,7 @@ class Ansible(BotPlugin):
         Runs specified Ansible playbook on the specific inventory
         """
 
-        _from = mess.frm
+        _from = mess
         inventory_file = "/".join([self.config['INVENTORY_DIR'], inventory])
         playbook_file = "/".join([self.config['PLAYBOOK_DIR'], playbook])
         ssh_key = self.config['ANSIBLE_SSH_KEY']
@@ -124,7 +124,7 @@ class Ansible(BotPlugin):
 
         self.log.debug("Got command: {} for Host: {} "
                        "in Inventory: {}".format(command, host, inventory))
-        _from = mess.frm
+        _from = mess
         command = " ".join(command)
         ssh_key = self.config['ANSIBLE_SSH_KEY']
         remote_user = self.config['ANSIBLE_REMOTE_USER']
@@ -170,7 +170,9 @@ class Ansible(BotPlugin):
         self.log.debug("Task list: {}".format(self['tasks']))
         tasklist = self['tasks']
         for uuid in list(tasklist):
-            author = self.build_identifier(tasklist[uuid])
+            _msg = tasklist[uuid]
+            self.log.debug(_msg)
+            author = _msg.frm
             (result, status) = tasks.get_task_info(uuid)
             self.log.debug("Processing task: {}; status: {}, "
                            "result:\n{}".format(uuid, status, result))
@@ -178,10 +180,11 @@ class Ansible(BotPlugin):
                 if self._bot.mode == 'slack':
                     card_color = 'green'
                     if status != 'finished': card_color = 'red'
-                    self.send_card(to=author, 
-                                   title="Task " + uuid + " " + status,
-                                   body="\`\`\`\n" + result + '\n\`\`\`',
-                                   color=card_color)
+                    self.send_card(in_reply_to=_msg, 
+                                   title="Task {} {}".format(uuid, status),
+                                   body=result,
+                                   color=card_color,
+                                   fields=(('COMMAND', str(_msg)),))
                 else:
                     self.send_templated(author,
                                         'task_info',
