@@ -170,13 +170,22 @@ class Ansible(BotPlugin):
         self.log.debug("Task list: {}".format(self['tasks']))
         tasklist = self['tasks']
         for uuid in list(tasklist):
-            author = tasklist[uuid]
+            author = self.build_identifier(tasklist[uuid])
             (result, status) = tasks.get_task_info(uuid)
             self.log.debug("Processing task: {}; status: {}, "
                            "result:\n{}".format(uuid, status, result))
             if status in ['finished', 'failed'] and result:
-                self.send_templated(self.build_identifier(author),
-                                    'task_info', {'uuid': uuid, 'status': status, 'task_info': result})
+                if self._bot.mode == 'slack':
+                    card_color = 'green'
+                    if status != 'finished': card_color = 'red'
+                    self.send_card(to=author, 
+                                   title="Task " + uuid + " " + status,
+                                   body="\`\`\`\n" + result + '\n\`\`\`',
+                                   color=card_color)
+                else:
+                    self.send_templated(author,
+                                        'task_info',
+                                        {'uuid': uuid, 'status': status, 'task_info': result})
                 del tasklist[uuid]
                 self['tasks'] = tasklist
             elif status == 'started':
